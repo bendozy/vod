@@ -1,4 +1,4 @@
-var router = require('express').Router();
+var userRouter = require('express').Router();
 var passport = require('passport');
 var jwt = require('jsonwebtoken');
 var userModel = require('./userModel');
@@ -8,7 +8,7 @@ var authMiddleware = require('../../middleware/authMiddleware');
 var secretKey = process.env.SECRET_KEY || 'vodvod';
 
 
-router.get('/', authMiddleware.checkUser, function(req, res) {
+userRouter.get('/', authMiddleware.checkUser, function(req, res) {
   userModel.find({}, function(err, users) {
     if (err) {
       return res.status(403).send(err);
@@ -18,7 +18,7 @@ router.get('/', authMiddleware.checkUser, function(req, res) {
   });
 });
 
-router.get('/:id', function(req, res) {
+userRouter.get('/:id', function(req, res) {
   userModel.findById(req.params.id, function(err, user) {
     if (err) {
       return res.status(403).send(err);
@@ -28,7 +28,7 @@ router.get('/:id', function(req, res) {
   });
 });
 
-router.post('/register', function(req, res) {
+userRouter.post('/register', function(req, res) {
   userModel.register(new userModel({
     username : req.body.username,
     email : req.body.email,
@@ -50,7 +50,7 @@ router.post('/register', function(req, res) {
   });
 });
 
-router.post('/login', passport.authenticate('local'), function(req, res) {
+userRouter.post('/login', passport.authenticate('local'), function(req, res) {
   var user = req.user;
 
   var token = jwt.sign(user, secretKey);
@@ -61,11 +61,11 @@ router.post('/login', passport.authenticate('local'), function(req, res) {
   });
 });
 
-router.get('/logout', function(req, res) {
+userRouter.get('/logout', function(req, res) {
     req.currentUser = null;
     req.userIsAdmin = false;
     res.status(204);
 });
 
 
-module.exports = router;
+module.exports = userRouter;

@@ -1,11 +1,11 @@
-var router = require('express').Router();
+var recipeRouter = require('express').Router();
 var recipeModel = require('./recipeModel');
 var logger = require('../../util/logger');
 var authMiddleware = require('../../middleware/authMiddleware');
 
 
 
-router.get('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+recipeRouter.get('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
   recipeModel.find({}, function(err, recipes) {
     if (err) {
       return res.status(403).send(err);
@@ -15,7 +15,7 @@ router.get('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(re
   });
 });
 
-router.get('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+recipeRouter.get('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
   recipeModel.findById(req.params.id, function(err, recipe) {
     if (err) {
       return res.status(403).send(err);
@@ -25,11 +25,10 @@ router.get('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function
   });
 });
 
-router.post('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
-  var newRecipe = recipeModel({
-    name: req.body.name,
-    userId: req.currentUser._id
-  });
+recipeRouter.post('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+  var recipe = req.body;
+  recipe.userId = req.currentUser._id;
+  var newRecipe = recipeModel(recipe);
 
   // save the user
   newRecipe.save(function(err) {
@@ -39,28 +38,21 @@ router.post('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(r
   });
 });
 
-router.put('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+recipeRouter.put('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
 
-  recipeModel.findById(req.params.id, function(err, recipe) {
-    if (err) throw err;
+  recipeModel.findOneAndUpdate({_id:req.params.id}, req.body, function (err, recipe) {
+    if (err) {
+      return res.status(403).send(err);
+    }
 
-    recipe.name = req.body.name;
-
-    recipe.save(function(err) {
-      if (err) {
-        return res.status(403).send(err);
-      }
-
-      res.status(200).send(recipe);
-    });
+    res.status(200).send(recipe);
   });
 });
 
-router.delete('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+recipeRouter.delete('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
 
   recipeModel.findById(req.params.id, function(err, recipe) {
     if (err) throw err;
-    console.log('rr', recipe);
 
     recipe.remove(function(err) {
       if (err) {
@@ -72,4 +64,4 @@ router.delete('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, funct
   });
 });
 
-module.exports = router;
+module.exports = recipeRouter;
