@@ -20,7 +20,7 @@ router.get('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function
     if (err) {
       return res.status(403).send(err);
     }
-    // show the one user
+
     res.status(200).send(recipe);
   });
 });
@@ -36,6 +36,39 @@ router.post('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(r
     if (err) res.status(403).send(err);
 
     res.status(200).send(newRecipe);
+  });
+});
+
+router.put('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+
+  recipeModel.findById(req.params.id, function(err, recipe) {
+    if (err) throw err;
+
+    recipe.name = req.body.name;
+
+    recipe.save(function(err) {
+      if (err) {
+        return res.status(403).send(err);
+      }
+
+      res.status(200).send(recipe);
+    });
+  });
+});
+
+router.delete('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+
+  recipeModel.findById(req.params.id, function(err, recipe) {
+    if (err) throw err;
+    console.log('rr', recipe);
+
+    recipe.remove(function(err) {
+      if (err) {
+        return res.status(403).send(err);
+      }
+
+      res.status(200).send({});
+    });
   });
 });
 
