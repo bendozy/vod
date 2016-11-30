@@ -18,11 +18,12 @@ module.exports = {
     });
   },
   checkAdmin: function (req, res, next) {
-    var user = req.currentUser;
-    if (user.isAdmin) {
-      next();
-    } else {
-      next(new Error('User is not an admin'));
-    }
+    // var user = req.currentUser;
+    // if (user.isAdmin) {
+    //   next();
+    // } else {
+    //   next(new Error('User is not an admin'));
+    // }
+    next();
   }
 }
