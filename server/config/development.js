@@ -1,4 +1,5 @@
 module.exports = {
   // enabled logging for development
-  logging: true
+  logging: true,
+  db: 'mongodb://localhost/vod'
 };

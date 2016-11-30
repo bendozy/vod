@@ -1,69 +1,42 @@
-var _ = require('lodash');
-var recipeRouter = require('express').Router();
+var router = require('express').Router();
+var recipeModel = require('./recipeModel');
+var logger = require('../../util/logger');
+var authMiddleware = require('../../middleware/authMiddleware');
 
-var recipes = [];
-var id = 0;
 
-var updateId = function(req, res, next) {
-  if (!req.body.id) {
-    id++;
-    req.body.id = id + '';
-  }
-  next();
-};
 
-recipeRouter.param('id', function(req, res, next, id) {
-  var recipe = _.find(recipes, {id: id});
-
-  if (recipe) {
-    req.recipe = recipe;
-    next();
-  } else {
-    res.send();
-  }
+router.get('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+  recipeModel.find({}, function(err, recipes) {
+    if (err) {
+      return res.status(403).send(err);
+    }
+    // object of all the recipes
+    res.status(200).send(recipes);
+  });
 });
 
-recipeRouter.route('/')
-    .get(function(req, res){
-      res.json(recipes);
-    })
-    .post(updateId, function(req, res) {
-      var recipe = req.body;
-      recipes.push(recipe);
-      res.json(recipe);
-    })
+router.get('/:id', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+  recipeModel.findById(req.params.id, function(err, recipe) {
+    if (err) {
+      return res.status(403).send(err);
+    }
+    // show the one user
+    res.status(200).send(recipe);
+  });
+});
 
-recipeRouter.route('/:id')
-    .get(function(req, res){
-      res.json(recipe || {});
-    })
-    .delete(function(req, res) {
-      var recipe = _.findIndex(recipes, {id: req.params.id});
-      if (!recipes[recipe]) {
-        res.send();
-      } else {
-        recipes.splice(recipe, 1);
-        res.json(req.recipe);
-      }
+router.post('/', authMiddleware.checkUser, authMiddleware.checkAdmin, function(req, res) {
+  var newRecipe = recipeModel({
+    name: req.body.name,
+    userId: req.currentUser._id
+  });
 
-      var update = req.body;
-      if (update.id) {
-        delete update.id
-      }
-    })
-    .put(function(req, res) {
-      var update = req.body;
-      if (update.id) {
-        delete update.id
-      }
+  // save the user
+  newRecipe.save(function(err) {
+    if (err) res.status(403).send(err);
 
-      var recipe = _.findIndex(recipes, {id: req.params.id});
-      if (!recipes[recipe]) {
-        res.send();
-      } else {
-        var updatedRecipe = _.assign(recipes[recipe], update);
-        res.json(updatedRecipe);
-      }
-    })
+    res.status(200).send(newRecipe);
+  });
+});
 
-module.exports = recipeRouter;
+module.exports = router;
